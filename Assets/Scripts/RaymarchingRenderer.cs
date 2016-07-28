@@ -17,11 +17,7 @@ public class RaymarchingRenderer : MonoBehaviour {
 	[SerializeField] // タイミング
 	private CameraEvent pass = CameraEvent.BeforeGBuffer;
 
-	public float scale = 2.0f;
-	public float scale2 = 1.0f;
-	public float coeff = 1;
-	public float amp = 1;
-	public float ampSpan = 1;
+	public float value = 1.0f;
 
 
 
@@ -99,8 +95,8 @@ public class RaymarchingRenderer : MonoBehaviour {
 	void Update(){
 
 
-		_material.SetFloat ("_Scale", scale * (1.1f + amp *Mathf.Sin(coeff * Time.time)));
+		//_material.SetFloat ("_Scale", scale * (1.1f + amp *Mathf.Sin(coeff * Time.time)));
 
-		_material.SetFloat ("_Scale2", scale2);
+		_material.SetFloat ("_Value", value);
 	}
 }

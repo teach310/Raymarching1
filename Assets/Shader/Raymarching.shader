@@ -4,8 +4,7 @@
 	{
 		//_MainTex("Main Texture", 2D) = ""{}
 		_Color("Main Color", COLOR) = (1,1,1,1)
-		_Scale("Scale", float) = 2.0
-		_Scale2("Scale2", float) = 1.0
+		_Value("Value", float) = 1.0
 	}
 	SubShader
 	{
@@ -15,172 +14,81 @@
 
 		CGINCLUDE
 		#include "UnityCG.cginc"
+		#include "Primitives.cginc"
+		
 
-		uniform float _Scale;
-		uniform float _Scale2;
-
-
-
-
-		float sphere(float3 pos, float radius)
-		{
-			return length(pos) - radius;
-		}
-
-		float roundBox(float3 pos, float3 size, float round)
-		{
-			return length(max(abs(pos) - size * 0.5, 0.0)) - round;
-		}
-
-		//四角形 sizeのxyzがそれぞれ四角形のxyzの長さになる．
-		float sdBox(float3 pos, float3 size)
-		{
-			float3 d = abs(pos) - size;
-			return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
-		}
-
-		//Union
-		float opU(float d1, float d2)
-		{
-			return min(d1, d2);
-		}
-
-		// Substraction 失敗
-		float opS(float d1, float d2)
-		{
-			return max(-d1, d2);
-		}
-
-		// Intersection 失敗
-		float opI(float d1, float d2)
-		{
-			return max(d1, d2);
-		}
-
-		// 十字
-		float crossShape(float3 pos, float len, float thick){
-			return opU(sdBox(pos, float3(len, thick, thick)), sdBox(pos, float3(thick, len, thick)));
-		}
-
-
-		// 3次元十字
-
-		float sdCross(float3 pos,float len,float thick)
-		{
-			float da = sdBox(pos, float3(len, thick, thick));
-			float db = sdBox(pos, float3(thick, len, thick));
-			float dc = sdBox(pos, float3(thick, thick, len));
-			return min(da, min(db, dc));
-		}
-
-		// 失敗
-		float map(float3 pos)
-		{
-			float d = sdBox(pos, float3(2.0, 2.0, 2.0));
-			float c = sdCross(pos, 3, 1);
-			//return opU(d,c);
-			return opS(c, d);
-		}
-
-		float3 mod(float3 a, float3 b)
-		{
-			return frac(abs(a / b)) * abs(b);
-		}
-
-		// 繰り返し
-		float3 repeat(float3 pos, float3 span)
-		{
-			return mod(pos, span) - span * 0.5;
-		}
-
-		float opScale(float3 pos, float scale)
-		{
-			//Box
-			//return sdBox(pos/scale, float3(1.0, 1.0, 1.0))*scale;
-			//roundBox
-			return roundBox(pos/scale, 1,1) * scale;
-		}
-
-		float opScale2(float3 pos, float scale)
-		{
-			//Box
-			//return sdBox(pos/scale, float3(1.0, 1.0, 1.0))*scale;
-			//roundBox
-			return opS(opScale(pos/scale, _Scale), roundBox(pos/scale, 1, 0.5)) * scale;
-		}
-
-		float RecursiveTetrahedron(float3 p)
-		{
-			p = repeat(p / 2, 3.0);
-			//p = repeat(p / 2, _Span);
-			const float3 a1 = float3(1.0, 1.0, 1.0);
-			const float3 a2 = float3(-1.0, -1.0, 1.0);
-			const float3 a3 = float3(1.0, -1.0, -1.0);
-			const float3 a4 = float3(-1.0, 1.0, -1.0);
-
-			const float scale = 2.0f;
-			//const float scale = _Scale;
-			float d;
-			for(int n = 0; n < 20; n++){
-				float3 c = a1;
-				float minDist = length(p - a1);
-				d = length(p - a2); if(d < minDist) {c = a2; minDist = d;}
-				d = length(p - a3); if(d < minDist) {c = a3; minDist = d;}
-				d = length(p - a4); if(d < minDist) {c = a4; minDist = d;}
-				p = scale * p - c * (scale - 1.0);
-			}
-
-			return length(p) * pow(scale, float(-n));
-		}
+		uniform float _Value;
+		
 
 		//sphere tracing
 		float DistanceFunc(float3 pos)
 		{
-			return sphere(pos, 1.0f);
+			//球体
+			//return sphere(pos, 0.25);
+
+			//繰り返し 球体
+			//float3 repeatPos = repeat(pos, float3(_Value, _Value, _Value));
+			//return sphere(repeatPos, 0.25);
+
+			//中心からの繰り返し
+			//float3 repeatPos = repeat2(pos, float3(2.0, 2.0, 2.0));
+			//float3 r = 1.0 - abs(repeatPos);
+			//return sphere(r, 0.1);
+
+			//中心からの繰り返し　スケーリング
+			//float scale = 1;
+			//float3 repeatPos = repeat(pos*scale, float3(2.0, 2.0, 2.0));
+			//float3 r = 1.0 - abs(repeatPos);
+			//return sdBox(r, float3(_Value, _Value, _Value))/scale;
+			
+			// 繰り返し　立方体
+			//float3 repeatPos = repeat(pos, float3(3.0, 3.0, 3.0));
+			//return sdBox(repeatPos, float3(0.5, 0.5, 0.5));
+
+			// 複製十字
+			//float3 repeatPos = repeat(pos, float3(3.0, 3.0, 3.0));
+			//return sdCross(repeatPos, 100, 0.1);
+
+			// 十字空きBox -----
+			//float d = sdBox(pos, float3(2.0, 2.0, 2.0));
+			//float c = sdCross(pos, 3, 1);
+			//return opS(c, d);
+			//---------------------
+			
+
+			//Menger Sponge
+			float holeDistanceRate = 2.0;  //最初穴と穴の距離は1/2
+			float holeScaleRate = 3.0;
+			float sr = holeScaleRate / holeDistanceRate; // srは一定
+			float scale = 1.0 * holeDistanceRate;
+			float d = sdBox(pos, float3(0.5, 0.5, 0.5));
+			for (int i = 0; i < 4; i++)
+			{
+				//span2.0で真ん中から繰り返す。　scale分全体の大きさが変化する。
+				float3 repeatPos = repeat(pos * scale, float3(2.0, 2.0, 2.0));
+				float3 r = 1.0 - abs(repeatPos);
+				float cross = sdCross(r * sr, 100, 0.5) /(scale*sr);
+				d = opS(cross, d);
+				scale *= 3.0; //穴と穴の距離と、穴の大きさは1/3になる。
+			}
+			return d;
+			
+			
+
 			//return roundBox(pos - float3(1, 0, 0), 1, 1); 
 			//return sdBox(pos, float3(1,0.5, 0.5)); 
 			//return crossShape(pos, 3, 1);
 			//return sdCross(pos, 3, 1);
 			//return map(pos);
 			//return opScale(pos, _Scale);
-			return RecursiveTetrahedron(pos); 
+			//return RecursiveTetrahedron(pos); 
 			//return roundBox(repeat(pos, 2.0f), 1.0f, 0.2f);
 			//return opU(sphere(pos, 1.0), sphere(pos - 0.5, 1.0));
 			//return opS(sphere(pos - float3(1,0,0), 1.0), sphere(pos, 1.0));
 			//return opI(sphere(pos - float3(1,0,0), 1.0), sphere(pos, 1.0));
-			//四角形 - 角丸四角
-			//return opScale2(pos, _Scale2);
 
 		}
 
-		//study それぞれ
-		float3 GetCameraPosition()	 { return _WorldSpaceCameraPos;		}
-		float3 GetCameraForward()	 { return -UNITY_MATRIX_V[2].xyz;	}
-		float3 GetCameraUp()		 { return UNITY_MATRIX_V[1].xyz;	}
-		float3 GetCameraRight()		 { return UNITY_MATRIX_V[0].xyz;	}
-		float  GetCameraFocalLength(){ return abs(UNITY_MATRIX_P[1][1]);}
-		float  GetCameraMaxDistance(){ return _ProjectionParams.z - _ProjectionParams.y;}
-
-		// Raymarchingの結果得られたワールド空間での位置にView-Projection行列をかけ，カメラから見た座標へと変換する
-		float GetDepth(float3 pos)
-		{
-			float4 vpPos = mul(UNITY_MATRIX_VP, float4(pos, 1.0));
-		#if defined(SHADER_TARGET_GLSL)
-			return(vpPos.z / vpPos.w) * 0.5 + 0.5;
-		#else
-			return vpPos.z / vpPos.w;
-		#endif
-		}
-
-		// 偏微分
-		float3 GetNormal(float3 pos)
-		{
-			const float d = 0.001;
-			return 0.5 + 0.5 * normalize(float3(
-				DistanceFunc(pos + float3(  d, 0.0, 0.0)) - DistanceFunc(pos + float3( -d, 0.0, 0.0)),
-				DistanceFunc(pos + float3(0.0,   d, 0.0)) - DistanceFunc(pos + float3(0.0,  -d, 0.0)),
-				DistanceFunc(pos + float3(0.0, 0.0,   d)) - DistanceFunc(pos + float3(0.0, 0.0,  -d))));
-		}
 		ENDCG
 
 		Pass
@@ -201,57 +109,18 @@
 			#pragma multi_compile ___ Unity_HDR_ON
 			
 			#include "UnityCG.cginc"
+			#include "Raymarching.cginc"
+
 			//uniform sampler2D _MainTex;
 			uniform fixed4 _Color;
-			struct VertInput
-			{
-				float4 vertex : POSITION;
-			};
-
-			struct VertOutput
-			{
-				float4 vertex		: SV_POSITION;
-				float4 screenPos	: TEXCOORD0;
-			};
-
-			struct GBufferOut
-			{
-				half4 diffuse	: SV_Target0; // rgb: diffuse,  a: occlusion
-				half4 specular	: SV_Target1; // rgb: specular, a: smoothness
-				half4 normal	: SV_Target2; // rgb: normal,   a: unused
-				half4 emission	: SV_Target3; // rgb: emission, a: unused
-				float depth		: SV_Depth;
-			};
-
-			VertOutput vert(VertInput v)
-			{
-				VertOutput o;
-				o.vertex = v.vertex;
-				o.screenPos = o.vertex;
-				return o;
-			}
+			
+			
 
 			GBufferOut frag(VertOutput i)
 			{
-
-			//カメラの方向い対してレイを伸ばしている
-
-				float4 screenPos = i.screenPos;
-#if UNITY_UV_STARTS_AT_TOP
-				screenPos.y *= -1.0;
-#endif
-				screenPos.x *= _ScreenParams.x / _ScreenParams.y;
-				float3 camPos	= GetCameraPosition();
-				float3 camDir	= GetCameraForward();
-				float3 camUp	= GetCameraUp();
-				float3 camSide	= GetCameraRight();
-				float focalLen	= GetCameraFocalLength();
-				float maxDistance = GetCameraMaxDistance();
-
-				float3 rayDir = normalize(
-					camSide * screenPos.x +
-					camUp	* screenPos.y +
-					camDir	* focalLen);
+				float3 rayDir = GetRayDirection(i.screenPos);
+				float3 camPos = GetCameraPosition();
+				float maxDist = GetCameraMaxDistance();
 
 
 			// Raymarchingのループ
@@ -262,7 +131,7 @@
 					distance = DistanceFunc(pos);
 					len += distance;
 					pos += rayDir * distance;
-					if(distance < 0.001 || len > maxDistance) break;
+					if(distance < 0.001 || len > maxDist) break;
 				}
 
 				if(distance > 0.001) discard;
